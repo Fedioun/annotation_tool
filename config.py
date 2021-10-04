@@ -12,7 +12,7 @@ log_file = "log.txt"
 
 classes = [
 	"O",
-	"LINK",
+	"MULT_FACTOR",
 	"CLI_NAME",
 	"MAIL_ADDR",
 	"PKG_TYPE",
@@ -27,10 +27,10 @@ classes = [
 ]
 
 d = [
-		"saved",
-		"validated",
-		"rejected"
-	]
+	"saved",
+	"validated",
+	"rejected"
+]
 
 
 def makedir(path):

@@ -59,12 +59,15 @@ def get_emails(password, username):
 				status, tokens = load_old_mail(emailId)
 
 				if status != -1:
+					if status > 0 :
+						break
 					out = {
 						"id" : emailId,
 						"subject" : subject,
 						"from" : From,
 						"tokens" : tokens
 					}
+
 				else:
 					
 

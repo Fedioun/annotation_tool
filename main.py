@@ -215,19 +215,44 @@ def navigation(stdscr, email):
 			stdscr.addstr(0, 5, "Voulez-vous vraiment valider ce document? (y/n)")
 			stdscr.refresh(pad_pos, 0, 5, 0, curses.LINES-1, curses.COLS-1)
 			while True:
-			    char = stdscr.getkey()       
+			    char = stdscr.getkey()
+			    stdscr.addstr(0, 5, " " * 40)    
 			    if char != curses.ERR:
 			    	if char == "y":
 			    		email["tokens"] = tokens
-			    		save(email, True)
+			    		save(email, 1)
 			    	stdscr.addstr(0, 5, " saved                                                    ")
+			    	try:
+			    		os.remove(os.path.join(config.output_folder, "saved", email["id"]))
+			    	except:
+			    		pass
 			    	break
+		# Reject
+		if key == "r":
+			stdscr.addstr(0, 5, "Voulez-vous vraiment rejeter ce document? (y/n)")
+			stdscr.refresh(pad_pos, 0, 5, 0, curses.LINES-1, curses.COLS-1)
+			while True:
+			    char = stdscr.getkey()
+			    stdscr.addstr(0, 5, " " * 40)    
+			    if char != curses.ERR:
+			    	if char == "y":
+			    		email["tokens"] = tokens
+			    		save(email, 2)
+			    	stdscr.addstr(0, 5, " saved                                                    ")
+			    	try:
+			    		os.remove(os.path.join(config.output_folder, "saved", email["id"]))
+			    	except:
+			    		pass
+			    	break
+
 
 
 		# Change color
 		if key.isdigit() :
+			config.log("tmp_digit : " + str(tmp_digit) + "\n")
+			config.log("key : " + str(key) + "\n\n")
 			if tmp_digit > 0 :
-				tmp_digit += int(key) * 2 + tmp_digit * 20
+				tmp_digit = int(key) * 2 + tmp_digit * 10
 			else:
 				tmp_digit = int(key) * 2
 
@@ -258,6 +283,7 @@ def navigation(stdscr, email):
 		stdscr.refresh(pad_pos, 0, 5, 0, curses.LINES-1, curses.COLS-1)
 
 def display_nav_info(info_win, token, pen_down, current_color):
+	config.log("Color : " + str(current_color) + "\n")
 	info_win.addstr(0, 0, " " * 30)
 	info_win.addstr(1, 0, " " * 30)
 	info_win.addstr(0, 0, "Current token : " + config.classes[int(token["class"]/2)], curses.color_pair(token["class"]))
