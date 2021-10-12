@@ -1,9 +1,5 @@
 import os
-import login
-
-username = login.username
-password = login.password
-host = login.host
+from login import username, password, host
 
 output_folder = "./data"
 

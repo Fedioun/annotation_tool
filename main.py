@@ -283,7 +283,7 @@ def navigation(stdscr, email):
 		stdscr.refresh(pad_pos, 0, 5, 0, curses.LINES-1, curses.COLS-1)
 
 def display_nav_info(info_win, token, pen_down, current_color):
-	config.log("Color : " + str(current_color) + "\n")
+	#config.log("Color : " + str(current_color) + "\n")
 	info_win.addstr(0, 0, " " * 30)
 	info_win.addstr(1, 0, " " * 30)
 	info_win.addstr(0, 0, "Current token : " + config.classes[int(token["class"]/2)], curses.color_pair(token["class"]))

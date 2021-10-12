@@ -83,8 +83,17 @@ def get_emails(password, username):
 						"from" : From,
 						"body" : extract_mail_body(msg)
 					}
+					########### Not filter history for clavel
+					if not "normandie@clavel-georges.fr" in out["from"]:
+						out["body"] = filter_email_history(out["body"])
+
+
+						
 					out["text"] = out["from"] + " \n\n " + out["subject"]  + "\n\n" + out["body"]
+
 					out["rawtokens"] = tokenize(out["text"])
+
+					
 					
 					msgs.append(out)
 
@@ -126,25 +135,36 @@ def extract_mail_body(msg):
 
 				soup = BeautifulSoup(content)
 				content = soup.get_text()
-
-
-	content = filter_email_history(content)
-
-
 	return content
 
 def filter_email_history(content):
-	lines = content.split("\n")
-	filtered = ""
-	k = 0
-	while not ((lines[k].startswith("De") or lines[k].startswith("From") )and "@" in lines[k]):
-		filtered += lines[k] + "\n"
-		k+=1
-		if k == len(lines):
-			break
+    lines = content.split("\n")
+    filtered = ""
+    k = 0
+    config.log("Start : " + lines[0])
+    while not filter_next(lines[k:]) or "normandie@clavel-georges.fr" in lines[0]:
+        filtered += lines[k] + "\n"
+        k+=1
+        if k == len(lines):
+            break
+    return filtered
 
 
-	return filtered
+def filter_next(lines):
+    if len(lines) < 4:
+        return False
+    else:
+        ####
+        if lines[0].startswith("From") and lines[1].startswith("Sent") and lines[2].startswith("To"):
+            return True
+        if lines[0].startswith("De") and lines[1].startswith("Envoyé") and lines[2].startswith("À"):
+            return True
+        if lines[0].startswith("De") and lines[2].startswith("Envoyé") and lines[3].startswith("À"):
+            return True
+        '''
+        if lines[0].startswith("") and lines[1].startswith("") and lines[2].startswith(""):
+            return True
+        '''
 
 '''
 Status :
@@ -197,7 +217,7 @@ def load(path):
 				"class" : int(line.split(" ")[1])
 			}
 			email["tokens"].append(token)
-	config.log(str(email["tokens"]))
+	#config.log(str(email["tokens"]))
 	return email
 
 
