@@ -118,8 +118,11 @@ def extract_mail_body(msg):
 			try:
 				content += part.get_payload(decode=True).decode()
 			except:
-				charset = re.findall('charset=".*?"', str(part))[0][9:-1]
-				content += part.get_payload(decode=True).decode(charset)
+				try:
+					charset = re.findall('charset=".*?"', str(part))[0][9:-1]
+					content += part.get_payload(decode=True).decode(charset)
+				except:
+					content += part.get_payload()
 
 	if content == "" or content.startswith("<html"):
 		content = ""
@@ -141,7 +144,6 @@ def filter_email_history(content):
     lines = content.split("\n")
     filtered = ""
     k = 0
-    config.log("Start : " + lines[0])
     while not filter_next(lines[k:]) or "normandie@clavel-georges.fr" in lines[0]:
         filtered += lines[k] + "\n"
         k+=1
@@ -219,6 +221,35 @@ def load(path):
 			email["tokens"].append(token)
 	#config.log(str(email["tokens"]))
 	return email
+
+def get_saved_emails(path):
+	files = os.listdir(path)
+	for file in files:
+		yield({
+			"id" : file,
+			"tokens" : load(os.path.join(path, file))["tokens"]
+		})
+
+
+def filter_tokens(tokens):
+	filtered = []
+	for t in tokens:
+		filtering = re.findall('\[.*?\]', t["text"])
+		for f in filtering:
+			if f!="[n]":
+				#config.log(str(filtering) + "\n")
+				t["text"] = t["text"].replace(f, "")
+		filtering = re.findall('<http.*?>', t["text"])
+		for f in filtering:
+			#config.log(str(filtering) + "\n")
+			t["text"] = t["text"].replace(f, "")
+		if t["text"] != "":
+			filtered.append(t)
+	return filtered
+		
+
+
+
 
 
 

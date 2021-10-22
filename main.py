@@ -1,7 +1,7 @@
 import curses
 from curses import wrapper
-from src.emails import get_emails, save, load
-
+from src.emails import get_emails, get_saved_emails, save, load, filter_tokens
+from optparse import OptionParser
 #import webbrowser
 import os
 
@@ -51,13 +51,6 @@ def write_text(stdscr, email):
 			})
 		else:
 			if token != "":
-				# Write token 
-				try:
-					stdscr.addstr(y, x, token)
-				except :
-					config.log("Fail to write token  " + token + " at postition y=" + str(y) + " x=" + str(x) + "\n")
-					pass
-
 				tokens.append({
 					"text" : token,
 					"x" : x,
@@ -73,11 +66,9 @@ def write_tokens(stdscr, email):
 	x = 0
 	y = 2
 	for token in email["tokens"]:
-
 		if len(token["text"]) + x > curses.COLS :
 			y += 1
 			x = 0
-
 		# Check carriage return 
 		if token["text"] == "[n]":
 			y += 1
@@ -85,18 +76,13 @@ def write_tokens(stdscr, email):
 			token["x"] = x
 			token["y"] = y
 		else:
-			if token["text"] != "":
-				# Write token 
-				try:
-					stdscr.addstr(y, x, token["text"], curses.color_pair(token["class"]))
-				except :
-					config.log("Fail to write token  " + token["text"] + " at postition y=" + str(y) + " x=" + str(x) + "\n")
-					pass
-
+			if token != "":
 				token["x"] = x
 				token["y"] = y
 
 				x += len(token["text"]) + 1
+
+
 	stdscr.refresh(0, 0, 5, 0, curses.LINES-1, curses.COLS-1)
 	return email["tokens"]
 
@@ -116,11 +102,23 @@ def navigation(stdscr, email):
 		tokens = write_tokens(stdscr, email)
 	else:
 		tokens = write_text(stdscr, email)
+	tokens = filter_tokens(tokens)
+
+	# Check carriage return 
+	
+
+	for token in tokens:
+		if token["text"]!= "[n]" and token["text"] != "": 
+			try:
+				w_token(stdscr, token)
+			except :
+				config.log("Fail to write token  " + token["text"] + " at postition y=" + str(token["y"]) + " x=" + str(token["x"]) + "\n")
+	stdscr.refresh(0, 0, 5, 0, curses.LINES-1, curses.COLS-1)
 	ntx = 50000
 	nty = 50000
 	k = 0
 	base_x = 0
-	pen_down = True
+	pen_down = False
 	current_color = 0
 	# Color var
 	tmp_digit = 0
@@ -249,8 +247,6 @@ def navigation(stdscr, email):
 
 		# Change color
 		if key.isdigit() :
-			config.log("tmp_digit : " + str(tmp_digit) + "\n")
-			config.log("key : " + str(key) + "\n\n")
 			if tmp_digit > 0 :
 				tmp_digit = int(key) * 2 + tmp_digit * 10
 			else:
@@ -298,6 +294,7 @@ def display_nav_info(info_win, token, pen_down, current_color):
 def main(stdscr):
 
 	email = get_emails(config.password, config.username)
+	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/email_information_extractor/data/AntoninTheFirst")
 	stdscr = configure_scr(stdscr)
 
 	pad = curses.newpad(1500, curses.COLS)
