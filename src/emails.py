@@ -7,41 +7,28 @@ from email.header import decode_header
 from datetime import datetime
 import config
 from bs4 import BeautifulSoup
-
-
-def tokenize(text):
-	return text.replace("\r\n",  " [n] ").replace("\n",  " [n] ").replace("\r",  " [n] ").split(" ")
+from src.filtering import filter, tokenize
 
 
 # Get N Emails
 def get_emails(password, username):
-
-
 	#'smtp.office365.com
 	server = imaplib.IMAP4_SSL("outlook.office365.com")
-	server.login(username, password)
-	#Adding a newline before the body text fixes the missing message body
-	#mailserver.sendmail('user@company.co','user@company.co','\npython email')
-	#mailserver.quit()
-
+	server.login(username, password)	
 	status, messages = server.select("INBOX")
-
-	# total number of emails
 	messages = int(messages[0])
-
 	msgs = []
 
 	for i in range(messages-30, 0, -1):
-		# fetch the email message by ID
-		#print(i)
 		res, msg = server.fetch(str(i), "(RFC822)")
 		for response in msg:
 			if isinstance(response, tuple):
 				# parse a bytes email into a message object
 				msg = email.message_from_bytes(response[1])
+				
 
+ 
 
-				time = datetime.strptime(" ".join(msg["Date"].split(" ")[:-1]), "%a, %d %b %Y %H:%M:%S").strftime("%Y-%m-%d-%H:%M:%S")
 
 				# decode the email subject
 				subject, encoding = decode_header(msg["Subject"])[0]
@@ -51,14 +38,31 @@ def get_emails(password, username):
 				From, encoding = decode_header(msg.get("From"))[0]
 				if isinstance(From, bytes):
 					From = From.decode(encoding)
-
 				emailaddr = From.split(" ")[-1][1:-1]
+
+				try:
+					config.log("Date : " + msg["Date"] + "\n")
+					time = datetime.strptime(" ".join(msg["Date"].split(" ")[:-1]), "%a, %d %b %Y %H:%M:%S").strftime("%Y-%m-%d-%H:%M:%S")
+
+				except:
+					try:
+						time = datetime.strptime(" ".join(msg["Date"].split(" ")[:-2]), "%a, %d %b %Y %H:%M:%S").strftime("%Y-%m-%d-%H:%M:%S")
+					except:
+
+						config.log("Cannot parse date for email :" + subject + "\n")
+						time = "2000-01-01-00:00:00"
 
 				emailId = time + "-" + emailaddr
 
-				status, tokens = load_old_mail(emailId)
 
-				if status != -1:
+
+
+
+
+
+				#status, tokens = load_old_mail(emailId)
+				status = 0
+				if status != -1 and False:
 					if status > 0 :
 						break
 					out = {
@@ -69,12 +73,8 @@ def get_emails(password, username):
 					}
 
 				else:
-					
-
-
 					#print("\nSubject:", subject)
 					# if the email message is multipart
-
 					config.log("Extracting + " + subject + "\n")
 
 					out = {
@@ -83,15 +83,17 @@ def get_emails(password, username):
 						"from" : From,
 						"body" : extract_mail_body(msg)
 					}
+
+
 					########### Not filter history for clavel
-					if not "normandie@clavel-georges.fr" in out["from"]:
-						out["body"] = filter_email_history(out["body"])
+					#if not "normandie@clavel-georges.fr" in out["from"]:
+					#	out["body"] = filter_email_history(out["body"])
 
 
 						
 					out["text"] = out["from"] + " \n\n " + out["subject"]  + "\n\n" + out["body"]
 
-					out["rawtokens"] = tokenize(out["text"])
+					out["tokens"] = filter(tokenize(out["text"]))
 
 					
 					
@@ -140,34 +142,6 @@ def extract_mail_body(msg):
 				content = soup.get_text()
 	return content
 
-def filter_email_history(content):
-    lines = content.split("\n")
-    filtered = ""
-    k = 0
-    while not filter_next(lines[k:]) or "normandie@clavel-georges.fr" in lines[0]:
-        filtered += lines[k] + "\n"
-        k+=1
-        if k == len(lines):
-            break
-    return filtered
-
-
-def filter_next(lines):
-    if len(lines) < 4:
-        return False
-    else:
-        ####
-        if lines[0].startswith("From") and lines[1].startswith("Sent") and lines[2].startswith("To"):
-            return True
-        if lines[0].startswith("De") and lines[1].startswith("Envoyé") and lines[2].startswith("À"):
-            return True
-        if lines[0].startswith("De") and lines[2].startswith("Envoyé") and lines[3].startswith("À"):
-            return True
-        '''
-        if lines[0].startswith("") and lines[1].startswith("") and lines[2].startswith(""):
-            return True
-        '''
-
 '''
 Status :
 0 - saved
@@ -185,7 +159,8 @@ def save(email, status):
 	
 	with open(path, "w", encoding="utf8") as out:
 		for token in email["tokens"]:
-			out.write(token["text"] + " " + str(token["class"]) + "\n")
+			if token["text"] != "":
+				out.write(token["text"] + " " + str(token["class"]) + "\n")
 
 
 
@@ -214,38 +189,25 @@ def load(path):
 	with open(path, "r", encoding="utf8") as out:
 		lines = out.readlines()
 		for line in lines:
-			token = {
-				"text" : line.split(" ")[0],
-				"class" : int(line.split(" ")[1])
-			}
-			email["tokens"].append(token)
-	#config.log(str(email["tokens"]))
+			if len(line.split(" "))>1:
+				token = {
+					"text" : line.split(" ")[0].strip(),
+					"class" : int(line.split(" ")[1])
+				}
+				email["tokens"].append(token)
 	return email
+
+
+
 
 def get_saved_emails(path):
 	files = os.listdir(path)
 	for file in files:
 		yield({
 			"id" : file,
-			"tokens" : load(os.path.join(path, file))["tokens"]
+			"tokens" : filter(load(os.path.join(path, file))["tokens"])
 		})
 
-
-def filter_tokens(tokens):
-	filtered = []
-	for t in tokens:
-		filtering = re.findall('\[.*?\]', t["text"])
-		for f in filtering:
-			if f!="[n]":
-				#config.log(str(filtering) + "\n")
-				t["text"] = t["text"].replace(f, "")
-		filtering = re.findall('<http.*?>', t["text"])
-		for f in filtering:
-			#config.log(str(filtering) + "\n")
-			t["text"] = t["text"].replace(f, "")
-		if t["text"] != "":
-			filtered.append(t)
-	return filtered
 		
 
 

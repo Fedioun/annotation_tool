@@ -19,7 +19,8 @@ classes = [
 	"DEPT_TO",
 	"HAYON",
 	"RDV_FIXE",
-	"CHG_PALETTE"
+	"CHG_PALETTE",
+	"NB_COTATION"
 ]
 
 d = [

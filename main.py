@@ -1,6 +1,6 @@
 import curses
 from curses import wrapper
-from src.emails import get_emails, get_saved_emails, save, load, filter_tokens
+from src.emails import get_emails, get_saved_emails, save, load
 from optparse import OptionParser
 #import webbrowser
 import os
@@ -27,40 +27,6 @@ def configure_scr(stdscr):
 		curses.init_pair(i * 2 + 1, 15, i)
 
 	return stdscr
-
-
-def write_text(stdscr, email):
-	tokens = []
-	x = 0
-	y = 2
-	for token in email["rawtokens"]:
-		# Crop long lines
-		if len(token) + x > curses.COLS :
-			y += 1
-			x = 0
-
-		# Check carriage return 
-		if token == "[n]":
-			y += 1
-			x = 0
-			tokens.append({
-				"text" : token,
-				"x" : x,
-				"y" : y,
-				"class" : 0
-			})
-		else:
-			if token != "":
-				tokens.append({
-					"text" : token,
-					"x" : x,
-					"y" : y,
-					"class" : 0
-				})
-
-				x += len(token) + 1
-	stdscr.refresh(0, 0, 5, 0, curses.LINES-1, curses.COLS-1)
-	return tokens
 
 def write_tokens(stdscr, email):
 	x = 0
@@ -98,14 +64,7 @@ def navigation(stdscr, email):
 	info_win = curses.newwin(5, curses.COLS-1, 0, 0)
 	pad_pos = 0
 
-	if "tokens" in email:
-		tokens = write_tokens(stdscr, email)
-	else:
-		tokens = write_text(stdscr, email)
-	tokens = filter_tokens(tokens)
-
-	# Check carriage return 
-	
+	tokens = write_tokens(stdscr, email)
 
 	for token in tokens:
 		if token["text"]!= "[n]" and token["text"] != "": 
@@ -122,6 +81,9 @@ def navigation(stdscr, email):
 	current_color = 0
 	# Color var
 	tmp_digit = 0
+	#config.log(str(tokens))
+
+	#config.log("k : " + str(k) + " " + str(len(tokens)))
 
 	display_nav_info(info_win, tokens[k], pen_down, current_color)
 	while True:
@@ -294,7 +256,8 @@ def display_nav_info(info_win, token, pen_down, current_color):
 def main(stdscr):
 
 	email = get_emails(config.password, config.username)
-	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/email_information_extractor/data/AntoninTheFirst")
+	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/email_information_extractor/output")
+	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/annotation_tool/data/validated")
 	stdscr = configure_scr(stdscr)
 
 	pad = curses.newpad(1500, curses.COLS)
