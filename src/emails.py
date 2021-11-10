@@ -54,12 +54,6 @@ def get_emails(password, username):
 
 				emailId = time + "-" + emailaddr
 
-
-
-
-
-
-
 				#status, tokens = load_old_mail(emailId)
 				status = 0
 				if status != -1 and False:
@@ -160,7 +154,7 @@ def save(email, status):
 	with open(path, "w", encoding="utf8") as out:
 		for token in email["tokens"]:
 			if token["text"] != "":
-				out.write(token["text"] + " " + str(token["class"]) + "\n")
+				out.write(token["text"] + " " + config.classes[int(token["class"]/2)] + "\n")
 
 
 
@@ -192,7 +186,7 @@ def load(path):
 			if len(line.split(" "))>1:
 				token = {
 					"text" : line.split(" ")[0].strip(),
-					"class" : int(line.split(" ")[1])
+					"class" : config.classes.index(line.split(" ")[1].strip()) * 2
 				}
 				email["tokens"].append(token)
 	return email

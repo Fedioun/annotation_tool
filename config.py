@@ -8,16 +8,20 @@ log_file = "log.txt"
 
 classes = [
 	"O",
-	"MULT_FACTOR",
 	"CLI_NAME",
 	"MAIL_ADDR",
 	"PKG_TYPE",
+	"MULT_FACTOR",
 	"WEIGHT",
+	"WEIGHT_UNIT",
 	"VOLUME",
-	"MERCH_TYPE",
+	"DIMENSIONS",
 	"DEPT_FROM",
 	"DEPT_TO",
+	"MERCH_TYPE",
 	"HAYON",
+	"DANGEROUS",
+	"STACKABLE",
 	"RDV_FIXE",
 	"CHG_PALETTE",
 	"NB_COTATION"

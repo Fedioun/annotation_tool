@@ -22,9 +22,11 @@ def configure_scr(stdscr):
 	curses.use_default_colors()
 	curses.init_pair(0, 15, curses.COLOR_BLACK)
 	curses.init_pair(1, curses.COLOR_BLACK, 15)
-	for i in range(1, curses.COLORS-1):
-		curses.init_pair(i * 2    , i, 0)
-		curses.init_pair(i * 2 + 1, 15, i)
+	config.log("WAAAAHAA " + str(curses.COLORS))
+	for i in range(1, curses.COLORS-30):
+
+		curses.init_pair(i * 2    , (i if i < 15 else i+6), 0)
+		curses.init_pair(i * 2 + 1, 15, (i if i < 15 else i+6))
 
 	return stdscr
 
@@ -255,7 +257,18 @@ def display_nav_info(info_win, token, pen_down, current_color):
 
 def main(stdscr):
 
-	email = get_emails(config.password, config.username)
+	parser = OptionParser()
+
+	parser.add_option("-l", "--local",
+	                  action="store_true", dest="local", default=False,
+	                  help="display locally stored emails")
+
+	(options, args) = parser.parse_args()
+
+	if options.local:
+		email = get_saved_emails("./data/local")
+	else:
+		email = get_emails(config.password, config.username)
 	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/email_information_extractor/output")
 	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/annotation_tool/data/validated")
 	stdscr = configure_scr(stdscr)
