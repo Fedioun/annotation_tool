@@ -19,7 +19,7 @@ def get_emails(password, username):
 	messages = int(messages[0])
 	msgs = []
 
-	for i in range(messages-30, 0, -1):
+	for i in range(messages-config.OFFSET, 0, -1):
 		res, msg = server.fetch(str(i), "(RFC822)")
 		for response in msg:
 			if isinstance(response, tuple):
@@ -54,9 +54,12 @@ def get_emails(password, username):
 
 				emailId = time + "-" + emailaddr
 
-				#status, tokens = load_old_mail(emailId)
-				status = 0
-				if status != -1 and False:
+				status, tokens = load_old_mail(emailId)
+
+				config.log(str(emailId) + "  " + str(status)+"\n\n\n")
+				
+				if status != -1:
+
 					if status > 0 :
 						break
 					out = {
@@ -87,6 +90,7 @@ def get_emails(password, username):
 						
 					out["text"] = out["from"] + " \n\n " + out["subject"]  + "\n\n" + out["body"]
 
+					config.log(out["text"])
 					out["tokens"] = filter(tokenize(out["text"]))
 
 					
@@ -144,6 +148,7 @@ Status :
 ''' 
 
 def save(email, status):
+
 	d = [
 		"saved",
 		"validated",
@@ -179,7 +184,7 @@ def load(path):
 		"id" : path,
 		"tokens" : []
 	}
-
+	config.log("Reading " + path + "\n")
 	with open(path, "r", encoding="utf8") as out:
 		lines = out.readlines()
 		for line in lines:
@@ -199,7 +204,7 @@ def get_saved_emails(path):
 	for file in files:
 		yield({
 			"id" : file,
-			"tokens" : filter(load(os.path.join(path, file))["tokens"])
+			"tokens" : load(os.path.join(path, file))["tokens"]
 		})
 
 		

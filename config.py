@@ -5,6 +5,7 @@ output_folder = "./data"
 
 log_file = "log.txt"
 
+OFFSET = 180
 
 classes = [
 	"O",

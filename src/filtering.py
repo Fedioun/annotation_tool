@@ -57,15 +57,21 @@ def filter_links(tokens):
 def expand(tokens, regex):
 	expanded = []
 	for t in tokens:
-		new = t["text"]
-		matches = re.findall(regex, t["text"])
-		for match in matches:
-			new = new.replace(match, " " + match + " ")
+		matches = re.finditer(regex, t["text"]) 
+		end = 0
+		for element in matches:
+			if element.span()[0] > end:
+				tmp = t.copy()
+				tmp["text"] = t["text"][end:element.span()[0]]
+				expanded.append(tmp)
 
-		for s in new.split(" "):
-			tmp = t.copy()		
-			tmp["text"] = s
-
+			tmp = t.copy()
+			tmp["text"] = t["text"][element.span()[0]: element.span()[1]]
+			expanded.append(tmp)
+			end = element.span()[1]
+		if end < len(t["text"]):
+			tmp = t.copy()
+			tmp["text"] = t["text"][end:]
 			expanded.append(tmp)
 	return expanded
 
@@ -186,6 +192,8 @@ def filter(tokens):
 	tokens = expand(tokens, "(\d+,\d+|\d+\.\d+|\d+)")
 	tokens = expand(tokens, ":")
 	tokens = expand(tokens, "/")
+	tokens = expand(tokens, "\+")
+	tokens = expand(tokens, "\(|\)|-+")
 	tokens = filter_empty(tokens)
 	tokens = bound_new_lines(tokens)
 	tokens = filter_empty(tokens)

@@ -61,6 +61,7 @@ def w_token(stdscr, token):
 # Main loop
 def navigation(stdscr, email):
 	stdscr.clear()
+	stdscr.addstr(0, 0, email["id"])
 	
 
 	info_win = curses.newwin(5, curses.COLS-1, 0, 0)
@@ -85,7 +86,7 @@ def navigation(stdscr, email):
 	tmp_digit = 0
 	#config.log(str(tokens))
 
-	#config.log("k : " + str(k) + " " + str(len(tokens)))
+	config.log("k : " + str(k) + " " + str(len(tokens)) + "\n")
 
 	display_nav_info(info_win, tokens[k], pen_down, current_color)
 	while True:
@@ -216,6 +217,11 @@ def navigation(stdscr, email):
 			else:
 				tmp_digit = int(key) * 2
 
+			
+
+			if tmp_digit > len(config.classes) * 2:
+				tmp_digit = int(key) * 2
+
 			current_color = tmp_digit
 
 		if not key.isdigit() and tmp_digit != 0:
@@ -263,14 +269,19 @@ def main(stdscr):
 	                  action="store_true", dest="local", default=False,
 	                  help="display locally stored emails")
 
+	parser.add_option("-v", "--validated",
+	                  action="store_true", dest="validated", default=False,
+	                  help="display locally stored validated emails")
+
 	(options, args) = parser.parse_args()
 
 	if options.local:
 		email = get_saved_emails("./data/local")
+	elif options.validated:
+		email = get_saved_emails("/home/nosmoth/Dev/Circoe/annotation_tool/data/validated")
 	else:
 		email = get_emails(config.password, config.username)
-	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/email_information_extractor/output")
-	#email = get_saved_emails("/home/nosmoth/Dev/Circoe/annotation_tool/data/validated")
+
 	stdscr = configure_scr(stdscr)
 
 	pad = curses.newpad(1500, curses.COLS)
